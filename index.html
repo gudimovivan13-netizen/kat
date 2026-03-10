@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>⎛⎝ NEON CAT ⎠⎞</title>
+    <!-- Font Awesome 6 (free) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* ----- CSS variables (Telegram + neony) ----- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: var(--tg-bg, #0b0f18);
+            color: var(--tg-text, #e0e5f0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s, color 0.2s;
+            padding: 0 0 70px 0; /* space for bottom nav */
+        }
+
+        /* glassmorphic container */
+        #app {
+            width: 100%;
+            max-width: 420px;
+            margin: 0 auto;
+            background: rgba(10, 15, 25, 0.4);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-radius: 32px 32px 0 0;
+            border: 1px solid rgba(0, 243, 255, 0.15);
+            box-shadow: 0 0 40px rgba(0, 243, 255, 0.2), inset 0 0 20px rgba(157, 0, 255, 0.2);
+            overflow: hidden;
+            position: relative;
+            min-height: 600px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* header score */
+        .global-score {
+            padding: 18px 20px 8px;
+            font-size: 2.4rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-shadow: 0 0 15px #00f3ff, 0 0 30px #9d00ff;
+            letter-spacing: 2px;
+            background: linear-gradient(145deg, rgba(0,243,255,0.1), rgba(157,0,255,0.1));
+            border-bottom: 1px solid rgba(0,243,255,0.3);
+        }
+        .global-score i {
+            font-size: 2rem;
+            color: #ffd966;
+            filter: drop-shadow(0 0 8px #ffaa00);
+        }
+
+        /* main content tab wrapper */
+        .tab-container {
+            flex: 1;
+            padding: 16px 16px 20px;
+            transition: opacity 0.25s ease;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeGlow 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeGlow {
+            0% { opacity: 0.5; filter: blur(2px); }
+            100% { opacity: 1; filter: blur(0); }
+        }
+
+        /* ----- glass cards (neon) ----- */
+        .glass-card {
+            background: rgba(20, 30, 45, 0.5);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 243, 255, 0.25);
+            border-radius: 28px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(157, 0, 255, 0.2), 0 0 20px rgba(0, 243, 255, 0.3);
+            padding: 18px 16px;
+            transition: all 0.2s;
+        }
+
+        /* ----- CLICKER TAB (котик) ----- */
+        .cat-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 25px;
+            margin-top: 15px;
+        }
+
+        .cat-button {
+            width: 220px;
+            height: 220px;
+            background: radial-gradient(circle at 30% 30%, #ffcc80, #b95f00);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 7rem;
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.1s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.15s;
+            box-shadow: 0 0 0 4px rgba(255, 200, 100, 0.5), 0 0 40px #ff9900, 0 0 80px #ff5500;
+            border: 2px solid rgba(255, 255, 255, 0.6);
+        }
+
+        .cat-button:active {
+            transform: scale(0.92);
+            box-shadow: 0 0 0 6px rgba(0, 243, 255, 0.8), 0 0 60px #00f3ff, 0 0 120px #9d00ff;
+        }
+
+        .score-badge {
+            font-size: 3rem;
+            font-weight: bold;
+            background: rgba(0,0,0,0.3);
+            padding: 10px 30px;
+            border-radius: 60px;
+            border: 1px solid #00f3ff;
+            box-shadow: inset 0 0 15px #00f3ff, 0 0 30px #9d00ff;
+        }
+
+        /* ----- SHOP items ----- */
+        .upgrade-list {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            margin-top: 8px;
+        }
+
+        .upgrade-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(10, 20, 35, 0.7);
+            border-radius: 24px;
+            padding: 15px 18px;
+            border-left: 6px solid #00f3ff;
+            box-shadow: 0 0 15px #00f3ff33;
+        }
+
+        .upgrade-info h3 {
+            font-size: 1.2rem;
+            margin-bottom: 6px;
+            color: #fff;
+            text-shadow: 0 0 6px cyan;
+        }
+        .upgrade-info p {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        .upgrade-stats {
+            text-align: right;
+            margin-right: 10px;
+            min-width: 70px;
+        }
+        .level-badge {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #ffd966;
+        }
+        .buy-btn {
+            background: transparent;
+            border: 2px solid #00f3ff;
+            color: #00f3ff;
+            font-weight: bold;
+            padding: 8px 18px;
+            border-radius: 36px;
+            font-size: 1rem;
+            box-shadow: 0 0 12px #00f3ff;
+            cursor: pointer;
+            transition: 0.15s;
+            backdrop-filter: blur(6px);
+        }
+        .buy-btn:active { transform: scale(0.94); background: #00f3ff22; }
+        .buy-btn.disabled {
+            opacity: 0.3;
+            pointer-events: none;
+            border-color: gray;
+            box-shadow: none;
+        }
+
+        /* ----- LEADERBOARD ----- */
+        .leaderboard-entry {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 18px;
+            margin: 8px 0;
+            background: rgba(0, 243, 255, 0.08);
+            border-radius: 40px;
+            border: 1px solid rgba(255,255,255,0.05);
+            font-size: 1.1rem;
+        }
+        .leaderboard-entry.current-user {
+            border: 2px solid #ff00ff;
+            box-shadow: 0 0 20px #ff00ff, inset 0 0 10px #ff00ff;
+            background: rgba(255, 0, 255, 0.1);
+            font-weight: bold;
+        }
+        .leaderboard-score {
+            font-family: monospace;
+            font-size: 1.3rem;
+            color: #ffd966;
+        }
+
+        /* ----- STATS grid ----- */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 10px;
+        }
+        .stat-cell {
+            background: rgba(0,0,0,0.35);
+            border-radius: 28px;
+            padding: 20px 8px;
+            text-align: center;
+            border: 1px solid #9d00ff55;
+            box-shadow: 0 0 20px #9d00ff33;
+        }
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #fff;
+            text-shadow: 0 0 10px cyan;
+        }
+        .stat-label {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #aaa;
+        }
+
+        /* ----- DONATE tab  ----- */
+        .donate-block {
+            text-align: center;
+            padding: 25px 10px;
+        }
+        .donate-btn {
+            background: linear-gradient(145deg, #ff22aa, #aa22ff);
+            border: none;
+            color: white;
+            font-size: 2rem;
+            padding: 25px 20px;
+            border-radius: 60px;
+            width: 100%;
+            font-weight: bold;
+            box-shadow: 0 0 40px #ff22aa, 0 0 90px #aa22ff;
+            cursor: pointer;
+            transition: 0.2s;
+            border: 2px solid rgba(255,255,255,0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .donate-btn:active { transform: scale(0.97); box-shadow: 0 0 80px white; }
+        .donate-note {
+            font-size: 1.2rem;
+            opacity: 0.8;
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 50px;
+        }
+
+        /* ----- bottom navigation (неон) ----- */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-width: 420px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-around;
+            background: rgba(8, 12, 22, 0.8);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border-top: 1px solid #00f3ff66;
+            box-shadow: 0 -5px 30px #00f3ff33;
+            padding: 8px 0 12px;
+            border-radius: 30px 30px 0 0;
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #8899bb;
+            font-size: 0.7rem;
+            transition: 0.15s;
+            cursor: pointer;
+            width: 60px;
+        }
+        .nav-item i {
+            font-size: 1.6rem;
+            margin-bottom: 2px;
+        }
+        .nav-item.active {
+            color: #00f3ff;
+            text-shadow: 0 0 15px #00f3ff, 0 0 30px #ff00ff;
+            transform: translateY(-3px);
+        }
+
+        /* misc */
+        .user-highlight {
+            font-weight: bold;
+            border-bottom: 2px dashed #ff00ff;
+        }
+        .small-note {
+            font-size: 0.8rem;
+            color: #aaa;
+            margin-top: 8px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <!-- верхний счёт (отображается всегда) -->
+    <div class="global-score">
+        <i class="fas fa-fish"></i>
+        <span id="globalPointsDisplay">0</span>
+    </div>
+
+    <!-- контейнер для пяти табов -->
+    <div class="tab-container" id="tabContainer">
+        <!-- 1. Кликер -->
+        <div class="tab-content active" id="tabClicker">
+            <div class="glass-card cat-area">
+                <div class="cat-button" id="clickerCat">
+                    🐱
+                </div>
+                <div class="score-badge" id="clickerPointsDisplay">🐟 0</div>
+            </div>
+        </div>
+
+        <!-- 2. Магазин -->
+        <div class="tab-content" id="tabShop">
+            <div class="glass-card">
+                <h2 style="margin-bottom: 15px; text-shadow: 0 0 8px cyan;">🚀 Улучшения</h2>
+                <div class="upgrade-list" id="shopContainer"></div>
+            </div>
+        </div>
+
+        <!-- 3. Лидеры -->
+        <div class="tab-content" id="tabLeaders">
+            <div class="glass-card">
+                <h2 style="margin-bottom: 10px;">🏆 Галактический топ</h2>
+                <div id="leaderboardList"></div>
+                <div class="small-note">* твой рекорд сохраняется локально</div>
+            </div>
+        </div>
+
+        <!-- 4. Статистика -->
+        <div class="tab-content" id="tabStats">
+            <div class="glass-card">
+                <h2 style="margin-bottom: 15px;">📈 Показатели</h2>
+                <div class="stats-grid">
+                    <div class="stat-cell"><span class="stat-value" id="statTotalClicks">0</span><div class="stat-label">кликов</div></div>
+                    <div class="stat-cell"><span class="stat-value" id="statPointsPerSec">0</span><div class="stat-label">оч/сек</div></div>
+                    <div class="stat-cell"><span class="stat-value" id="statTime">00:00</span><div class="stat-label">сессия</div></div>
+                    <div class="stat-cell"><span class="stat-value" id="statTotalEarned">0</span><div class="stat-label">всего добыто</div></div>
+                    <div class="stat-cell" style="grid-column: span 2;"><span class="stat-value" id="statEnergy">∞</span><div class="stat-label">неон. энергия</div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. Донат -->
+        <div class="tab-content" id="tabDonate">
+            <div class="glass-card donate-block">
+                <button class="donate-btn" id="donateButton">
+                    <i class="fas fa-rocket"></i> @IvaN_Goodi
+                </button>
+                <div class="donate-note">
+                    <i class="fas fa-heart" style="color: #ff5588;"></i> Понравилась игра? порадуй авторая!
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- нижняя навигация 5 кнопок -->
+    <div class="bottom-nav">
+        <div class="nav-item active" data-tab="tabClicker"><i class="fas fa-cat"></i><span>Кликер</span></div>
+        <div class="nav-item" data-tab="tabShop"><i class="fas fa-cart-shopping"></i><span>Магазин</span></div>
+        <div class="nav-item" data-tab="tabLeaders"><i class="fas fa-trophy"></i><span>Лидеры</span></div>
+        <div class="nav-item" data-tab="tabStats"><i class="fas fa-chart-line"></i><span>Статистика</span></div>
+        <div class="nav-item" data-tab="tabDonate"><i class="fas fa-heart"></i><span>Донат</span></div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // ---------- Telegram integration ----------
+        const tg = window.Telegram?.WebApp;
+        if (tg) {
+            tg.ready();
+            tg.expand();
+            tg.onEvent('themeChanged', function() {
+                applyTelegramTheme();
+            });
+        }
+
+        function applyTelegramTheme() {
+            if (!tg) return;
+            const theme = tg.themeParams || {};
+            document.documentElement.style.setProperty('--tg-bg', theme.bg_color || '#0b0f18');
+            document.documentElement.style.setProperty('--tg-text', theme.text_color || '#e0e5f0');
+            document.documentElement.style.setProperty('--tg-button', theme.button_color || '#2ea6ff');
+            document.documentElement.style.setProperty('--tg-hint', theme.hint_color || '#7a8aa5');
+        }
+        applyTelegramTheme();
+
+        // ---------- Данные пользователя ----------
+        let userName = 'Вы';
+        let userId = 'local_' + Math.floor(Math.random()*100000);
+        if (tg && tg.initDataUnsafe?.user) {
+            const u = tg.initDataUnsafe.user;
+            userName = u.first_name || 'Игрок';
+            userId = u.id?.toString() || userId;
+        }
+
+        // ---------- Игровое состояние (сохраняемое) ----------
+        let gameState = {
+            points: 0,
+            clickPower: 1,
+            autoclickers: 0,
+            critLevel: 0,          // количество купленных crit (каждый +5% шанс)
+            totalClicks: 0,
+            totalEarned: 0,
+        };
+
+        // Лидеры (вымышленные + текущий)
+        let leaderboard = [
+            { name: 'CryptoKing', score: 8450 },
+            { name: 'NeonCat', score: 6720 },
+            { name: 'ByteMaster', score: 5100 },
+            { name: 'QuantumFox', score: 3890 },
+            { name: 'CyberPunk', score: 2750 },
+            { name: 'StarDust', score: 1230 },
+        ];
+
+        // текущий игрок будет добавлен в leaderboard отдельно
+
+        // ---------- localStorage загрузка ----------
+        function loadGame() {
+            try {
+                const saved = localStorage.getItem('neonCatSave');
+                if (saved) {
+                    const obj = JSON.parse(saved);
+                    gameState = { ...gameState, ...obj };
+                }
+            } catch (e) {}
+            // добавим текущего игрока в лидерборд, если ещё нет
+            updateLeaderboardWithCurrent();
+        }
+
+        function saveGame() {
+            localStorage.setItem('neonCatSave', JSON.stringify(gameState));
+        }
+
+        // ---------- Leaderboard helpers ----------
+        function updateLeaderboardWithCurrent() {
+            // удаляем старого 'Вы' или пользователя с таким же id (для чистоты)
+            leaderboard = leaderboard.filter(entry => !entry.isCurrent);
+            // добавляем текущего
+            leaderboard.push({
+                name: userName,
+                score: gameState.points,
+                isCurrent: true,
+                userId: userId
+            });
+            sortLeaderboard();
+        }
+
+        function sortLeaderboard() {
+            leaderboard.sort((a,b) => b.score - a.score);
+        }
+
+        // отрисовка таблицы лидеров
+        function renderLeaderboard() {
+            const container = document.getElementById('leaderboardList');
+            if (!container) return;
+            let html = '';
+            const topSix = leaderboard.slice(0, 7); // показать до 7 (включая текущего)
+            topSix.forEach(entry => {
+                const isCurrent = entry.isCurrent || (entry.userId === userId);
+                html += `<div class="leaderboard-entry ${isCurrent ? 'current-user' : ''}">
+                    <span><i class="fas fa-user"></i> ${entry.name}</span>
+                    <span class="leaderboard-score">🐟 ${entry.score}</span>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        // ---------- Обновление UI (счёт, магазин, лидеры) ----------
+        function refreshUI() {
+            document.getElementById('globalPointsDisplay').innerText = gameState.points;
+            document.getElementById('clickerPointsDisplay').innerHTML = `🐟 ${gameState.points}`;
+            // магазин
+            renderShop();
+            // лидеры обновляются отдельно после изменения счёта
+            updateLeaderboardWithCurrent();
+            renderLeaderboard();
+            // статистика обновится по интервалу
+            saveGame();
+        }
+
+        // ---------- Логика крита ----------
+        function getCritChance() {
+            // первый уровень даёт 10%, каждый след +5%
+            if (gameState.critLevel === 0) return 0;
+            return Math.min(10 + (gameState.critLevel - 1) * 5, 80);
+        }
+
+        function handleClick() {
+            let gain = gameState.clickPower;
+            const critChance = getCritChance();
+            const r = Math.random() * 100;
+            if (r <= critChance) {
+                gain *= 5;   // x5 крит
+            }
+            gameState.points += gain;
+            gameState.totalClicks += 1;
+            gameState.totalEarned += gain;
+            refreshUI();
+        }
+
+        // ---------- Магазин ----------
+        function renderShop() {
+            const container = document.getElementById('shopContainer');
+            if (!container) return;
+            const critChance = getCritChance();
+            const critDisplay = gameState.critLevel === 0 ? '0%' : critChance + '%';
+
+            const upgrades = [
+                { name: '⚡ Сила клика +1', desc: 'Навсегда +1 за клик', price: 10, level: gameState.clickPower - 1, type: 'clickPower' },
+                { name: '🤖 Автокликер', desc: '+1 очко/сек (суммируется)', price: 50, level: gameState.autoclickers, type: 'auto' },
+                { name: '💥 Крит. удар', desc: `шанс x5 (сейчас ${critDisplay})`, price: 100, level: gameState.critLevel, type: 'crit' }
+            ];
+
+            let html = '';
+            upgrades.forEach(up => {
+                html += `<div class="upgrade-item">
+                    <div class="upgrade-info">
+                        <h3>${up.name}</h3>
+                        <p>${up.desc}</p>
+                    </div>
+                    <div class="upgrade-stats">
+                        <span class="level-badge">${up.level}</span>
+                    </div>
+                    <button class="buy-btn ${gameState.points < up.price ? 'disabled' : ''}" data-type="${up.type}" data-price="${up.price}">
+                        🪙 ${up.price}
+                    </button>
+                </div>`;
+            });
+            container.innerHTML = html;
+
+            // обработчики покупок
+            document.querySelectorAll('.buy-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const type = btn.dataset.type;
+                    const price = parseInt(btn.dataset.price, 10);
+                    if (gameState.points < price) return;
+
+                    gameState.points -= price;
+                    if (type === 'clickPower') {
+                        gameState.clickPower += 1;
+                    } else if (type === 'auto') {
+                        gameState.autoclickers += 1;
+                        // перезапуск интервала не нужен, он уже работает и использует актуальное значение
+                    } else if (type === 'crit') {
+                        gameState.critLevel += 1;
+                    }
+                    gameState.totalEarned = gameState.totalEarned; // не меняем общее заработанное
+                    refreshUI();
+                });
+            });
+        }
+
+        // ---------- Автокликер (каждую секунду) ----------
+        setInterval(() => {
+            if (gameState.autoclickers > 0) {
+                const autoGain = gameState.autoclickers;
+                gameState.points += autoGain;
+                gameState.totalEarned += autoGain;
+                refreshUI();  // обновит счёт, магазин, лидеров
+            }
+        }, 1000);
+
+        // ---------- Статистика (обновление раз в секунду) ----------
+        const startTime = Date.now();
+        setInterval(() => {
+            // общая статистика
+            document.getElementById('statTotalClicks').innerText = gameState.totalClicks;
+            document.getElementById('statPointsPerSec').innerText = gameState.autoclickers;
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            document.getElementById('statTime').innerText = `${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
+            document.getElementById('statTotalEarned').innerText = gameState.totalEarned;
+            document.getElementById('statEnergy').innerText = '∞';
+        }, 500);
+
+        // ---------- Навигация (табы) ----------
+        const navItems = document.querySelectorAll('.nav-item');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        function activateTab(tabId) {
+            tabContents.forEach(tc => tc.classList.remove('active'));
+            navItems.forEach(n => n.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            const activeNav = Array.from(navItems).find(n => n.dataset.tab === tabId);
+            if (activeNav) activeNav.classList.add('active');
+        }
+
+        navItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const tabId = item.dataset.tab;
+                if (tabId) activateTab(tabId);
+            });
+        });
+
+        // ---------- Кликер ----------
+        document.getElementById('clickerCat').addEventListener('click', (e) => {
+            handleClick();
+        });
+
+        // ---------- Донат кнопка ----------
+        document.getElementById('donateButton').addEventListener('click', () => {
+            window.open('https://t.me/IvaN_Goodi', '_blank');
+        });
+
+        // ---------- Инициализация игры ----------
+        loadGame();
+        // синхронизация лидерборда с текущим счётом
+        updateLeaderboardWithCurrent();
+        renderLeaderboard();
+        refreshUI(); // обновит магазин и прочее
+
+        // небольшой хак: добавить случайный стартовый счёт для "Вы" если 0
+        if (gameState.points === 0) {
+            // можно не менять, но чтобы лидерборд был интереснее
+        }
+        renderLeaderboard();
+
+        // пересохранять лидеров при каждом изменении счёта (уже в refreshUI)
+    })();
+</script>
+</body>
+</html>
